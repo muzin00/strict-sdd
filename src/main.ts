@@ -1,129 +1,89 @@
 #!/usr/bin/env node
-import { existsSync, mkdirSync, realpathSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 
-const VERSION = "0.1.0";
+import { Cli, ExitCode } from "./cli.js";
 
-const HELP = `Usage: ssdd <command> [options]
-
-Commands:
-  init [dir]     Bootstrap a strict-sdd project (default: current dir)
-
-Options:
-  -h, --help     Show help
-  -v, --version  Show version
-`;
-
-/**
- * spec: specs/cli.tsp `enum ExitCode`
- */
-const ExitCode = {
-  success: 0,
-  usageError: 64,
-  internalError: 70,
+/** `--help` / `--version` は command 横断の global option */
+const GLOBAL_OPTIONS = {
+  help: { type: "boolean", short: "h" },
+  version: { type: "boolean", short: "v" },
 } as const;
-
-/** spec: `model ProjectConfig` を serialize した sentinel file */
-const CONFIG_FILE = "strict-sdd.config.json";
-
-/** README.md 最小 template (project 名 placeholder のみ) */
-const README_TEMPLATE = `# {{PROJECT_NAME}}
-`;
-
-/** .gitignore 基本 pattern */
-const GITIGNORE_TEMPLATE = `node_modules/
-dist/
-`;
 
 /**
  * spec: `op main(argv: string[]): ExitCode`
- * argv は `ssdd` 以降のトークン (process.argv.slice(2))。
+ * argv を parse し `interface Cli` の subcommand へ dispatch する free op
+ * (Cli の method ではない)。argv は `ssdd` 以降のトークン (process.argv.slice(2))。
  * process.exit は呼ばず ExitCode を return する。
  */
 export async function main(argv: string[]): Promise<number> {
+  const cli = new Cli();
+
   const parsed = safeParse(argv);
   if (parsed === null) {
-    console.error(HELP);
+    console.error(cli.help());
     return ExitCode.usageError;
   }
 
   const { values, positionals } = parsed;
 
   if (values.version) {
-    console.log(VERSION);
+    console.log(cli.version);
     return ExitCode.success;
   }
 
   const [command, ...rest] = positionals;
 
-  if (command === "init") {
-    return initProject(rest);
+  switch (command) {
+    case "init":
+      return cli.init(rest);
+    // spec: `spec add` / `spec validate` は `spec` subcommand に grouping
+    case "spec":
+      return dispatchSpec(cli, rest);
+    case undefined:
+      console.log(cli.help());
+      return ExitCode.success;
+    default:
+      if (values.help) {
+        console.log(cli.help());
+        return ExitCode.success;
+      }
+      console.error(`Unknown command: ${command}`);
+      console.error(cli.help());
+      return ExitCode.usageError;
   }
-
-  if (values.help || command === undefined) {
-    console.log(HELP);
-    return ExitCode.success;
-  }
-
-  console.error(`Unknown command: ${command}`);
-  console.error(HELP);
-  return ExitCode.usageError;
 }
 
-const OPTIONS = {
-  help: { type: "boolean", short: "h" },
-  version: { type: "boolean", short: "v" },
-} as const;
+/** `spec` subcommand (`add` / `validate`) への dispatch */
+function dispatchSpec(cli: Cli, args: string[]): number {
+  const [sub, ...rest] = args;
+  switch (sub) {
+    case "add":
+      if (rest.length !== 1) {
+        console.error(`Usage: ${cli.name} spec add <name>`);
+        return ExitCode.usageError;
+      }
+      return cli.add(rest[0]);
+    case "validate":
+      if (rest.length !== 1) {
+        console.error(`Usage: ${cli.name} spec validate <target>`);
+        return ExitCode.usageError;
+      }
+      return cli.validate(rest[0]);
+    default:
+      console.error(`Unknown spec subcommand: ${sub ?? "(none)"}`);
+      console.error(cli.help());
+      return ExitCode.usageError;
+  }
+}
 
 /** parseArgs を wrap し、parse 失敗時は null を返す (usageError 判定用) */
 function safeParse(argv: string[]) {
   try {
-    return parseArgs({ args: argv, options: OPTIONS, allowPositionals: true });
+    return parseArgs({ args: argv, options: GLOBAL_OPTIONS, allowPositionals: true });
   } catch {
     return null;
-  }
-}
-
-/**
- * spec: `op Project.init(dir?: string): ExitCode`
- * @rule positional は dir 1 個まで、それ以外は usageError(64)
- * @rule config (sentinel file) が存在する場合は何も生成せず internalError(70)
- * @rule config 以外の既存 file は上書きしない (非破壊)
- */
-function initProject(args: string[]): number {
-  if (args.length > 1) {
-    console.error("Usage: ssdd init [dir]");
-    return ExitCode.usageError;
-  }
-
-  const dir = args[0] ?? ".";
-  const configPath = join(dir, CONFIG_FILE);
-
-  if (existsSync(configPath)) {
-    console.error(`Already a strict-sdd project: ${configPath}`);
-    return ExitCode.internalError;
-  }
-
-  // @sideEffect specs/ ディレクトリ
-  mkdirSync(join(dir, "specs"), { recursive: true });
-
-  // @sideEffect strict-sdd.config.json (ProjectConfig)
-  const config = { sentinel: "strict-sdd", version: VERSION };
-  writeFileSync(configPath, `${JSON.stringify(config, null, 2)}\n`);
-
-  // @sideEffect README.md / .gitignore (非破壊)
-  writeFileIfAbsent(join(dir, "README.md"), README_TEMPLATE);
-  writeFileIfAbsent(join(dir, ".gitignore"), GITIGNORE_TEMPLATE);
-
-  console.log(`Initialized strict-sdd project in ${dir}`);
-  return ExitCode.success;
-}
-
-function writeFileIfAbsent(path: string, content: string): void {
-  if (!existsSync(path)) {
-    writeFileSync(path, content);
   }
 }
 
