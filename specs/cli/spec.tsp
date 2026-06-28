@@ -55,8 +55,45 @@ namespace Spec {
 
 namespace Project {
   /**
+   * strict-sdd project の永続設定。`strict-sdd.config.json` に serialize される。
+   * project 判定はこの file の存在で行う (= sentinel file)。
+   * @invariant `sentinel` は常に "strict-sdd" (誤検出防止の marker)
+   * @invariant `version` は bootstrap した CLI の semver
+   */
+  model ProjectConfig {
+    /** strict-sdd project であることを示す sentinel marker */
+    sentinel: "strict-sdd";
+
+    /** bootstrap 時の CLI version */
+    version: string;
+  }
+
+  /**
+   * init が dir 配下に生成する artifact。
+   * 言語/framework 非依存 (package.json 等は生成しない)。
+   */
+  enum Artifact {
+    /** spec を格納する directory (`specs/`) */
+    specsDir,
+
+    /** ProjectConfig を serialize した sentinel file (`strict-sdd.config.json`) */
+    config,
+
+    /** project 名 placeholder のみの最小 template (`README.md`) */
+    readme,
+
+    /** 基本的な無視 pattern (`.gitignore`) */
+    gitignore,
+  }
+
+  /**
    * 新規 strict-sdd project を bootstrap。
-   * @rule 既存ディレクトリが strict-sdd project の場合は abort
+   * dir 省略時は cwd (".") を対象とする。既存 repo 内への bootstrap も許容。
+   *
+   * @sideEffect dir 配下に Artifact.specsDir / config / readme / gitignore を生成
+   * @rule config (sentinel file) が既に存在する場合は何も生成せず internalError(70) で abort
+   * @rule config 以外の既存 file (README.md / .gitignore 等) は上書きしない (非破壊)
+   * @rule positional は dir 1 個まで、それ以外は usageError(64)
    */
   op `init`(dir?: string): ExitCode;
 }
