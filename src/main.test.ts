@@ -6,7 +6,7 @@ import { join } from "node:path";
 import { main } from "./main.js";
 
 /**
- * spec: specs/cli/spec.tsp namespace SsddCli
+ * spec: specs/cli.tsp namespace SsddCli
  * ExitCode { success: 0, usageError: 64, internalError: 70 }
  */
 const SUCCESS = 0;

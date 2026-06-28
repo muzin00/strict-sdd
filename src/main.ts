@@ -17,7 +17,7 @@ Options:
 `;
 
 /**
- * spec: specs/cli/spec.tsp `enum ExitCode`
+ * spec: specs/cli.tsp `enum ExitCode`
  */
 const ExitCode = {
   success: 0,
