@@ -1,7 +1,24 @@
 /**
- * ssdd CLI の spec (prototype 段階)。
- * @rule / @invariant / @sideEffect の custom decorator は未実装、
- * Behavior intent は当面 doc の prose で表現。decorator 実装後は置換。
+ * # ssdd CLI
+ *
+ * strict-sdd の dogfooding loop を起動するための self-development tool。
+ * spec の編集・検証・regenerate を CLI 経由で回すことで loop が成立する。
+ *
+ * ## 制約
+ * - CLI library は使わず `node:util` parseArgs で start
+ *   (subcommand 増加で摩擦が出たら lib に swap)
+ * - output は人間 readable と AI consumable を両立 (stdout に `--json` を考慮)
+ * - 失敗時の exit code を明確化 (codegen pipeline に組み込みやすくする)
+ * - 人間は spec のみ編集 = この CLI 自身も最終的には spec から regenerate される
+ *   (spec-as-source goal、meta-circular)
+ *
+ * ## スコープ外 (将来)
+ * - multi-language emitter (TS / Python / Go / Rust)
+ * - AI 連携の自動化 (現状は AI 呼出を人間が trigger)
+ * - IDE integration (LSP server 連携)
+ *
+ * NOTE: @rule / @invariant / @sideEffect は custom decorator 未実装。
+ * Behavior intent は当面 doc の prose で表現し、decorator 実装後に置換する。
  */
 namespace SsddCli;
 
@@ -45,7 +62,7 @@ op main(argv: string[]): ExitCode;
 namespace Spec {
   /**
    * 新 spec の雛形を scaffold。
-   * @sideEffect specs/<name>/ ディレクトリと spec.md / spec.tsp を新規作成
+   * @sideEffect specs/<name>.tsp を新規作成 (flat 構成、prose は doc コメントに集約)
    */
   op add(name: string): ExitCode;
 
