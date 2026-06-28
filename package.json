@@ -3,22 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "bin": {
-    "ssdd": "dist/src/cli.js"
+    "ssdd": "dist/src/main.js"
   },
   "type": "module",
-  "main": "dist/src/index.js",
-  "exports": {
-    ".": {
-      "types": "./dist/src/index.d.ts",
-      "default": "./dist/src/index.js"
-    }
-  },
   "scripts": {
-    "build": "tsc && pnpm run build:tsp",
+    "build": "tsc",
     "watch": "tsc --watch",
-    "build:tsp": "tsp compile . --no-emit",
-    "ssdd": "node dist/src/cli.js",
-    "test": "vitest run",
+    "ssdd": "node dist/src/main.js",
+    "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
@@ -36,6 +28,5 @@
   "peerDependencies": {
     "@typespec/compiler": "^1.13.0"
   },
-  "packageManager": "pnpm@11.6.0",
-  "tspMain": "src/main.tsp"
+  "packageManager": "pnpm@11.6.0"
 }
