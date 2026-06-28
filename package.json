@@ -1,25 +1,14 @@
 {
   "name": "strict-sdd",
   "version": "0.1.0",
+  "private": true,
   "type": "module",
   "main": "dist/src/index.js",
-  "tspMain": "src/main.tsp",
   "exports": {
     ".": {
       "types": "./dist/src/index.d.ts",
       "default": "./dist/src/index.js"
     }
-  },
-  "peerDependencies": {
-    "@typespec/compiler": "^1.13.0"
-  },
-  "devDependencies": {
-    "@types/node": "^22.0.0",
-    "@typespec/compiler": "^1.13.0",
-    "oxfmt": "^0.56.0",
-    "oxlint": "^1.71.0",
-    "typescript": "^5.3.3",
-    "vitest": "^4.1.9"
   },
   "scripts": {
     "build": "tsc && pnpm run build:tsp",
@@ -32,6 +21,17 @@
     "format": "oxfmt",
     "format:check": "oxfmt --check"
   },
-  "private": true,
-  "packageManager": "pnpm@11.6.0"
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@typespec/compiler": "^1.13.0",
+    "oxfmt": "^0.56.0",
+    "oxlint": "^1.71.0",
+    "typescript": "^5.3.3",
+    "vitest": "^4.1.9"
+  },
+  "peerDependencies": {
+    "@typespec/compiler": "^1.13.0"
+  },
+  "packageManager": "pnpm@11.6.0",
+  "tspMain": "src/main.tsp"
 }
