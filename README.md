@@ -5,6 +5,19 @@
 >
 > Refactor は regenerate になる。
 
+## Goal
+
+> Spec-as-source: The spec is the main source file over time, and only the spec is edited by the human, the human never touches the code.
+
+strict-sdd が目指す最終形はこれ。
+
+- 編集対象は **spec (M+B+IF) のみ**。code は AI が spec から regenerate する derivative artifact
+- bug fix も feature 追加も「spec を直す → regenerate」で完結
+- 同じ spec から framework / 言語の異なる実装を出せる (framework disposable)
+- spec と code の drift は構造的に起きない (片方向の derivation しかない)
+
+具体例: Express → Fastify、FastAPI → Django、monolith → microservices の切替は、spec を保ったまま AI が regenerate するだけの操作になる。
+
 ## 思想
 
 人間が書く artifact は **Model**, **Behavior**, **IF** の 3 つだけ。
@@ -13,11 +26,7 @@
 - **Behavior** = 何が起きるか (business rule, state transition, invariant, side effect)
 - **IF** = どう触れるか (operation signature, view shape, contract)
 
-framework, 言語, 実装は AI が 3 つから regenerate する disposable layer で、人間は書かない。
-
-この 3 つは **Single Source of Truth**。サーバ・クライアント・型・ドキュメント・テスト・DB schema は全てここから derive される。drift は構造的に発生しない。だから refactor は regenerate になり、framework / 言語切替が成立する。
-
-Express → Fastify、FastAPI → Django、monolith → microservices の切替は、Model, Behavior, IF を保ったまま AI が新しい実装を regenerate する操作になる。
+この 3 つが Single Source of Truth。code (server, client, type, docs, test, DB schema) は全てここから derive される。
 
 ## なぜ strict か
 
